@@ -39,3 +39,15 @@ export enum WorkflowStep {
   REVIEW = 5,
   COMPLETED = 6
 }
+
+// Authentication Types
+export enum UserRole {
+  ADMIN = 'ADMIN',
+  USER = 'USER'
+}
+
+export interface User {
+  email: string;
+  role: UserRole;
+  password?: string; // Only used internally/mocking
+}

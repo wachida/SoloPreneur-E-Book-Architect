@@ -246,7 +246,7 @@ export const BookPreview: React.FC<BookPreviewProps> = ({ ebook, apiKey, onResta
         bodyContent += `<div style="page-break-after: always; margin-bottom: 80px;">`;
         bodyContent += `<h2 style="font-size: 2.2em; border-bottom: 3px solid #9333ea; padding-bottom: 15px; margin-bottom: 30px; color: #581c87; font-family: 'Prompt', sans-serif;">${chap.title}</h2>`;
         const htmlContent = await marked.parse(chap.content || '');
-        bodyContent += `<div style="font-size: 1.15em; line-height: 1.9; color: #292524;">${htmlContent}</div>`;
+        bodyContent += `<div style="font-size: 1em; line-height: 1.9; color: #292524;">${htmlContent}</div>`;
         bodyContent += `</div>`;
     }
 
@@ -259,7 +259,7 @@ export const BookPreview: React.FC<BookPreviewProps> = ({ ebook, apiKey, onResta
           <title>${ebook.title}</title>
           <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@400;700&family=Sarabun:wght@300;400;600&display=swap" rel="stylesheet">
           <style>
-              body { font-family: 'Sarabun', sans-serif; max-width: 800px; margin: 0 auto; padding: 60px; background-color: #ffffff; }
+              body { font-family: 'Sarabun', sans-serif; max-width: 800px; margin: 0 auto; padding: 60px; background-color: #ffffff; font-size: 16px; }
               img { max-width: 100%; height: auto; display: block; margin: 30px auto; border-radius: 8px; }
               h1, h2, h3 { font-family: 'Prompt', sans-serif; font-weight: 700; }
               p { margin-bottom: 1.6em; }
@@ -323,7 +323,7 @@ export const BookPreview: React.FC<BookPreviewProps> = ({ ebook, apiKey, onResta
 
         // CSS
         oebps.file("style.css", `
-            body { font-family: 'Sarabun', sans-serif; line-height: 1.6; color: #333; }
+            body { font-family: 'Sarabun', sans-serif; line-height: 1.6; color: #333; font-size: 16px; }
             h1, h2, h3 { color: #7e22ce; margin-top: 1em; margin-bottom: 0.5em; font-family: 'Prompt', sans-serif; }
             img { max-width: 100%; height: auto; display: block; margin: 1em auto; }
             blockquote { border-left: 4px solid #a855f7; padding-left: 1em; color: #6b21a8; font-style: italic; margin: 1em 0; }

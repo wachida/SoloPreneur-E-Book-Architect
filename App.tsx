@@ -1,50 +1,30 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Chapter, EBook, AgentRole, LogEntry, WorkflowStep } from './types';
+import { Chapter, EBook, AgentRole, LogEntry, WorkflowStep, User, UserRole } from './types';
 import { generateBookOutline, generateChapterContent, generateCoverImage } from './services/geminiService';
 import { AgentLog } from './components/AgentLog';
 import { BookPreview } from './components/BookPreview';
+import { Login } from './components/Login';
+import { AdminDashboard } from './components/AdminDashboard';
+import { authService } from './services/authService';
 import { 
   BeakerIcon, 
   BookOpenIcon, 
   PencilIcon, 
   SparklesIcon, 
-  ChevronRightIcon, 
-  UserIcon, 
+  CheckCircleIcon, 
   ArrowRightIcon,
   ClipboardDocumentCheckIcon,
-  CheckCircleIcon,
   ArrowPathIcon,
   PlusIcon,
   TrashIcon,
   KeyIcon,
   EyeIcon,
-  EyeSlashIcon
+  EyeSlashIcon,
+  ArrowLeftOnRectangleIcon,
+  ComputerDesktopIcon,
+  Cog6ToothIcon,
+  CpuChipIcon
 } from '@heroicons/react/24/solid';
-
-// --- STORYSET IMAGE CONFIGURATION ---
-// Note for Developer: Download these SVGs from Storyset and place them in your public folder, 
-// then update these paths. Currently using stylized placeholders matching the theme.
-const STORYSET_IMAGES = {
-    // Landing Page Hero
-    landing: "https://placehold.co/600x600/f3e8ff/9333ea?text=Storyset:+Blogging+Pana\n(Download+SVG)", 
-    // Link: https://storyset.com/illustration/blogging/pana#BA68C8FF&hide=&hide=complete
-
-    // Writing/Processing
-    processing: "https://placehold.co/400x400/f3e8ff/9333ea?text=Storyset:+Translator+Amico\n(AI+Working)",
-    // Link: https://storyset.com/illustration/translator/amico
-
-    // Approval/Review
-    approval: "https://placehold.co/400x300/f3e8ff/9333ea?text=Storyset:+Usability+Testing\n(Review)",
-    // Link: https://storyset.com/illustration/usability-testing/pana#BA68C8FF&hide=&hide=complete
-
-    // Completed
-    completed: "https://placehold.co/400x400/f3e8ff/9333ea?text=Storyset:+Audiobook+Amico\n(Done)",
-    // Link: https://storyset.com/illustration/audiobook/amico
-    
-    // Writing Step (Alternative)
-    writing: "https://placehold.co/400x400/f3e8ff/9333ea?text=Storyset:+Blogging+Amico",
-    // Link: https://storyset.com/illustration/blogging/amico
-};
 
 const COVER_STYLES = [
   { id: 'Minimalist', label: 'Minimalist', desc: 'เรียบง่าย สบายตา น้อยแต่มาก' },
@@ -76,6 +56,10 @@ const TONES = [
 ];
 
 const App: React.FC = () => {
+  // Authentication State
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [currentView, setCurrentView] = useState<'APP' | 'ADMIN'>('APP');
+
   // Global Config State
   const [apiKey, setApiKey] = useState<string>('');
   const [tempApiKey, setTempApiKey] = useState('');
@@ -92,6 +76,23 @@ const App: React.FC = () => {
   const [logs, setLogs] = useState<LogEntry[]>([]);
   const [eBook, setEBook] = useState<Partial<EBook>>({ chapters: [] });
   const [isProcessing, setIsProcessing] = useState(false);
+
+  // Check auth on load
+  useEffect(() => {
+    const user = authService.getCurrentUser();
+    if (user) {
+      setCurrentUser(user);
+      if (user.role === UserRole.ADMIN) {
+        // Optional: Default to Dashboard for admin
+      }
+    }
+  }, []);
+
+  const handleLogout = () => {
+    authService.logout();
+    setCurrentUser(null);
+    setCurrentView('APP');
+  };
 
   const addLog = (agent: AgentRole, message: string) => {
     setLogs(prev => [...prev, { timestamp: new Date(), agent, message }]);
@@ -326,80 +327,14 @@ const App: React.FC = () => {
     );
   };
 
-  // RENDER: API KEY INPUT SCREEN
-  if (!apiKey) {
-    return (
-      <div className="min-h-screen flex items-center justify-center p-4 relative">
-        <div className="max-w-md w-full bg-white/90 backdrop-blur-xl rounded-3xl shadow-2xl p-8 border border-stone-200 relative z-20 animate-fade-in-up">
-           <div className="text-center mb-8">
-             <div className="inline-flex items-center justify-center p-3 bg-gradient-to-br from-purple-500 to-pink-600 rounded-2xl text-white shadow-lg shadow-purple-200 mb-4">
-               <BookOpenIcon className="w-8 h-8" />
-             </div>
-             <h1 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-700 to-pink-600 mb-2">
-                SoloPreneur E-Book Architect
-             </h1>
-             <p className="text-stone-500 text-sm">
-                ระบบสร้างหนังสือ E-Book อัจฉริยะด้วย AI
-             </p>
-           </div>
-
-           <div className="space-y-4">
-             <div className="bg-purple-50 border border-purple-100 rounded-xl p-4 text-xs text-purple-800 leading-relaxed">
-               <strong>Note:</strong> แอปพลิเคชันนี้ต้องการ <strong>Gemini API Key</strong> ของคุณในการทำงาน (คีย์ของคุณจะถูกเก็บไว้ในเบราว์เซอร์เท่านั้น ไม่มีการส่งไปยังเซิร์ฟเวอร์อื่น)
-             </div>
-
-             <div>
-               <label className="block text-sm font-bold text-stone-700 mb-2">Google Gemini API Key</label>
-               <div className="relative">
-                 <input 
-                    type={showApiKey ? "text" : "password"}
-                    value={tempApiKey}
-                    onChange={(e) => setTempApiKey(e.target.value)}
-                    placeholder="AIzaSy..."
-                    className="w-full pl-10 pr-12 py-3 bg-white border-2 border-purple-100 rounded-xl focus:border-purple-500 focus:ring-0 outline-none transition-all font-mono"
-                    autoComplete="off"
-                    autoCorrect="off"
-                    autoCapitalize="off"
-                    spellCheck="false"
-                 />
-                 <KeyIcon className="w-5 h-5 text-stone-400 absolute left-3 top-1/2 -translate-y-1/2" />
-                 <button
-                    type="button"
-                    onClick={() => setShowApiKey(!showApiKey)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-600 p-1"
-                >
-                    {showApiKey ? (
-                        <EyeSlashIcon className="w-5 h-5" />
-                    ) : (
-                        <EyeIcon className="w-5 h-5" />
-                    )}
-                </button>
-               </div>
-               <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noreferrer" className="text-[10px] text-purple-600 hover:underline mt-2 inline-block">
-                 ยังไม่มี Key? กดที่นี่เพื่อสร้าง API Key ฟรี
-               </a>
-             </div>
-
-             <button 
-               onClick={() => setApiKey(tempApiKey)}
-               disabled={!tempApiKey.trim()}
-               className="w-full py-3.5 bg-purple-900 text-white rounded-xl font-bold hover:bg-purple-800 transition-all shadow-lg shadow-purple-200 disabled:opacity-50 disabled:cursor-not-allowed"
-             >
-               เริ่มต้นใช้งาน
-             </button>
-           </div>
-        </div>
-        
-        {/* Footer for API Screen */}
-        <div className="absolute bottom-6 left-0 right-0 text-center text-stone-400 text-xs z-10 opacity-70">
-            © 2026 SoloPreneur E-Book Architect. By Wachida H🦐. All rights reserved.
-        </div>
-      </div>
-    );
+  // --- RENDER: LOGIN IF NOT AUTHENTICATED ---
+  if (!currentUser) {
+    return <Login onLogin={setCurrentUser} />;
   }
 
+  // --- RENDER: AUTHENTICATED APP ---
   return (
-    <div className="min-h-screen pb-20 relative">
+    <div className="min-h-screen pb-20 relative bg-purple-50/20">
       {/* Header */}
       <header className="bg-white/80 backdrop-blur-md border-b border-purple-100 sticky top-0 z-50 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
@@ -407,25 +342,117 @@ const App: React.FC = () => {
             <div className="bg-purple-600 text-white p-1.5 rounded-lg shadow-md shadow-purple-200">
                 <BookOpenIcon className="w-5 h-5" />
             </div>
-            <h1 className="text-lg sm:text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-700 to-pink-600">
+            <h1 className="text-lg sm:text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-700 to-pink-600 hidden md:block">
               SoloPreneur E-Book Architect
             </h1>
+            <span className="md:hidden text-purple-700 font-bold">SEA</span>
           </div>
+
           <div className="flex items-center gap-3">
-             <button 
-               onClick={() => setApiKey('')}
-               className="text-xs text-stone-500 hover:text-red-500 underline"
-             >
-               เปลี่ยน API Key
-             </button>
-             <div className="text-xs sm:text-sm text-stone-500 hidden sm:block bg-purple-50/80 px-4 py-1.5 rounded-full border border-purple-100">
-                AI One-Stop Service v2.0
-            </div>
+             {/* Admin Controls */}
+             {currentUser.role === UserRole.ADMIN && (
+               <div className="flex bg-stone-100 p-1 rounded-lg mr-2">
+                 <button
+                    onClick={() => setCurrentView('APP')}
+                    className={`p-1.5 rounded-md flex items-center gap-2 text-xs font-bold transition-all ${currentView === 'APP' ? 'bg-white text-purple-700 shadow-sm' : 'text-stone-500 hover:text-stone-700'}`}
+                 >
+                    <ComputerDesktopIcon className="w-4 h-4" /> <span className="hidden sm:inline">App</span>
+                 </button>
+                 <button
+                    onClick={() => setCurrentView('ADMIN')}
+                    className={`p-1.5 rounded-md flex items-center gap-2 text-xs font-bold transition-all ${currentView === 'ADMIN' ? 'bg-white text-purple-700 shadow-sm' : 'text-stone-500 hover:text-stone-700'}`}
+                 >
+                    <Cog6ToothIcon className="w-4 h-4" /> <span className="hidden sm:inline">Admin</span>
+                 </button>
+               </div>
+             )}
+
+             <div className="flex items-center gap-2 pl-3 border-l border-stone-200">
+                <span className="text-xs text-stone-600 hidden sm:block">
+                    {currentUser.email}
+                </span>
+                <button 
+                    onClick={handleLogout}
+                    className="p-2 text-stone-400 hover:text-red-500 hover:bg-red-50 rounded-full transition-all"
+                    title="ออกจากระบบ"
+                >
+                    <ArrowLeftOnRectangleIcon className="w-5 h-5" />
+                </button>
+             </div>
           </div>
         </div>
       </header>
+      
+      {/* View Router */}
+      {currentView === 'ADMIN' ? (
+         <AdminDashboard />
+      ) : !apiKey ? (
+         // API Key View
+         <div className="min-h-screen flex items-center justify-center p-4 relative -mt-16">
+            <div className="max-w-md w-full bg-white/90 backdrop-blur-xl rounded-3xl shadow-2xl p-8 border border-stone-200 relative z-20 animate-fade-in-up">
+               <div className="text-center mb-8">
+                 <div className="inline-flex items-center justify-center p-3 bg-gradient-to-br from-purple-500 to-pink-600 rounded-2xl text-white shadow-lg shadow-purple-200 mb-4">
+                   <KeyIcon className="w-8 h-8" />
+                 </div>
+                 <h1 className="text-xl font-bold text-stone-800 mb-2">
+                    Enter Gemini API Key
+                 </h1>
+                 <p className="text-stone-500 text-sm">
+                    เพื่อเริ่มใช้งานระบบสร้าง E-Book
+                 </p>
+               </div>
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 relative z-20">
+               <div className="space-y-4">
+                 <div>
+                   <label className="block text-sm font-bold text-stone-700 mb-2">Google Gemini API Key</label>
+                   <div className="relative">
+                     <input 
+                        type={showApiKey ? "text" : "password"}
+                        value={tempApiKey}
+                        onChange={(e) => setTempApiKey(e.target.value)}
+                        placeholder="AIzaSy..."
+                        className="w-full pl-10 pr-12 py-3 bg-white border-2 border-purple-100 rounded-xl focus:border-purple-500 focus:ring-0 outline-none transition-all font-mono"
+                     />
+                     <KeyIcon className="w-5 h-5 text-stone-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                     <button
+                        type="button"
+                        onClick={() => setShowApiKey(!showApiKey)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-600 p-1"
+                    >
+                        {showApiKey ? (
+                            <EyeSlashIcon className="w-5 h-5" />
+                        ) : (
+                            <EyeIcon className="w-5 h-5" />
+                        )}
+                    </button>
+                   </div>
+                   <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noreferrer" className="text-[10px] text-purple-600 hover:underline mt-2 inline-block">
+                     ยังไม่มี Key? กดที่นี่เพื่อสร้าง API Key ฟรี
+                   </a>
+                 </div>
+
+                 <button 
+                   onClick={() => setApiKey(tempApiKey)}
+                   disabled={!tempApiKey.trim()}
+                   className="w-full py-3.5 bg-purple-900 text-white rounded-xl font-bold hover:bg-purple-800 transition-all shadow-lg shadow-purple-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                 >
+                   ยืนยัน API Key
+                 </button>
+                 
+                 <div className="pt-2 text-center">
+                    <button 
+                        onClick={() => setApiKey('')}
+                        className="text-xs text-stone-400 hover:text-stone-600 underline"
+                    >
+                        เปลี่ยน API Key ภายหลังได้ที่มุมขวาบน
+                    </button>
+                 </div>
+               </div>
+            </div>
+         </div>
+      ) : (
+          // Main App View
+          <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 relative z-20">
         
         {/* Progress Stepper */}
         {step !== WorkflowStep.INPUT && (
@@ -444,94 +471,77 @@ const App: React.FC = () => {
           </div>
         )}
 
-        {/* STEP 0: INPUT CONFIGURATION */}
+        {/* STEP 0: INPUT CONFIGURATION (Clean Layout) */}
         {step === WorkflowStep.INPUT && (
-          <div className="max-w-6xl mx-auto mt-6 animate-fade-in">
-            <div className="flex flex-col lg:flex-row items-stretch bg-white/90 backdrop-blur-sm rounded-3xl shadow-xl shadow-purple-200/50 border border-white overflow-hidden">
-                
-                {/* Left Side: Illustration */}
-                <div className="lg:w-5/12 bg-gradient-to-br from-purple-100 to-pink-50 flex items-center justify-center p-8 relative overflow-hidden">
-                    <div className="absolute top-0 left-0 w-full h-full bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-20"></div>
-                    <img 
-                        src={STORYSET_IMAGES.landing} 
-                        alt="Blogging Pana" 
-                        className="relative z-10 w-full max-w-sm drop-shadow-2xl mix-blend-multiply transform hover:scale-105 transition-transform duration-500"
-                    />
-                    <div className="absolute bottom-6 text-center w-full px-6">
-                        <p className="text-purple-900/40 text-xs font-mono">Illustration by Storyset</p>
-                    </div>
+          <div className="max-w-3xl mx-auto mt-10 animate-fade-in">
+            <div className="bg-white/90 backdrop-blur-sm rounded-3xl shadow-xl shadow-purple-200/50 border border-white overflow-hidden">
+                <div className="bg-gradient-to-r from-purple-700 to-pink-600 p-8 text-white text-center">
+                     <h2 className="text-2xl font-bold mb-2 font-promt">สร้าง E-Book ระดับมืออาชีพ</h2>
+                     <p className="text-purple-100 font-sarabun text-sm">ครบวงจรตั้งแต่ วางแผน เขียนเนื้อหา และออกแบบปก</p>
                 </div>
+                
+                <div className="p-10 space-y-8">
+                    {/* Topic Input */}
+                    <div>
+                        <label className="block text-stone-700 font-bold mb-3 text-base">
+                            1. คุณอยากเขียนเรื่องอะไร? <span className="text-red-400">*</span>
+                        </label>
+                        <input
+                          type="text"
+                          value={topic}
+                          onChange={(e) => setTopic(e.target.value)}
+                          placeholder="เช่น คู่มือการลงทุนอสังหาฯ ฉบับมนุษย์เงินเดือน..."
+                          className="w-full px-5 py-4 text-base border-2 border-stone-200 bg-purple-50/30 rounded-2xl focus:border-purple-500 focus:bg-white focus:ring-4 focus:ring-purple-50 outline-none transition-all placeholder-stone-400"
+                        />
+                    </div>
 
-                {/* Right Side: Form */}
-                <div className="lg:w-7/12 flex flex-col">
-                    <div className="bg-gradient-to-r from-purple-700 to-pink-600 p-8 text-white relative">
-                         <h2 className="text-3xl font-bold mb-2 font-promt">สร้าง E-Book ระดับมืออาชีพ</h2>
-                         <p className="text-purple-100 font-sarabun">ครบวงจรตั้งแต่ วางแผน เขียนเนื้อหา และออกแบบปก</p>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        {/* Tone */}
+                        <div>
+                            <label className="block text-stone-700 font-bold mb-3 text-sm">2. น้ำเสียง (Tone)</label>
+                            <select 
+                                value={tone}
+                                onChange={(e) => setTone(e.target.value)}
+                                className="w-full px-4 py-3 border-2 border-stone-200 rounded-xl focus:border-purple-500 outline-none bg-white text-sm"
+                            >
+                                {TONES.map(t => <option key={t.id} value={t.id}>{t.label}</option>)}
+                            </select>
+                        </div>
+
+                         {/* Style */}
+                         <div>
+                            <label className="block text-stone-700 font-bold mb-3 text-sm">3. สไตล์ปก (Style)</label>
+                            <select 
+                                value={coverStyle}
+                                onChange={(e) => setCoverStyle(e.target.value)}
+                                className="w-full px-4 py-3 border-2 border-stone-200 rounded-xl focus:border-purple-500 outline-none bg-white text-sm"
+                            >
+                                {COVER_STYLES.map(s => <option key={s.id} value={s.id}>{s.label}</option>)}
+                            </select>
+                        </div>
                     </div>
                     
-                    <div className="p-8 space-y-8 flex-1">
-                        {/* Topic Input */}
-                        <div>
-                            <label className="block text-stone-700 font-bold mb-3 text-lg">
-                                1. คุณอยากเขียนเรื่องอะไร? <span className="text-red-400">*</span>
-                            </label>
-                            <input
-                              type="text"
-                              value={topic}
-                              onChange={(e) => setTopic(e.target.value)}
-                              placeholder="เช่น คู่มือการลงทุนอสังหาฯ ฉบับมนุษย์เงินเดือน..."
-                              className="w-full px-5 py-4 text-lg border-2 border-stone-200 bg-purple-50/30 rounded-2xl focus:border-purple-500 focus:bg-white focus:ring-4 focus:ring-purple-50 outline-none transition-all placeholder-stone-400"
-                            />
-                        </div>
+                    {/* Author Bio */}
+                    <div>
+                         <label className="block text-stone-700 font-bold mb-3 text-sm">
+                            4. ข้อมูลผู้เขียน (Optional)
+                        </label>
+                        <textarea 
+                            value={authorBio}
+                            onChange={(e) => setAuthorBio(e.target.value)}
+                            placeholder="เช่น ผู้เชี่ยวชาญด้านการตลาด 10 ปี..."
+                            className="w-full px-4 py-3 text-sm border-2 border-stone-200 bg-purple-50/30 rounded-2xl focus:border-purple-500 focus:bg-white outline-none h-24 resize-none placeholder-stone-400"
+                        ></textarea>
+                    </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            {/* Tone */}
-                            <div>
-                                <label className="block text-stone-700 font-bold mb-3">2. น้ำเสียง (Tone)</label>
-                                <select 
-                                    value={tone}
-                                    onChange={(e) => setTone(e.target.value)}
-                                    className="w-full px-4 py-3 border-2 border-stone-200 rounded-xl focus:border-purple-500 outline-none bg-white"
-                                >
-                                    {TONES.map(t => <option key={t.id} value={t.id}>{t.label}</option>)}
-                                </select>
-                            </div>
-
-                             {/* Style */}
-                             <div>
-                                <label className="block text-stone-700 font-bold mb-3">3. สไตล์ปก (Style)</label>
-                                <select 
-                                    value={coverStyle}
-                                    onChange={(e) => setCoverStyle(e.target.value)}
-                                    className="w-full px-4 py-3 border-2 border-stone-200 rounded-xl focus:border-purple-500 outline-none bg-white"
-                                >
-                                    {COVER_STYLES.map(s => <option key={s.id} value={s.id}>{s.label}</option>)}
-                                </select>
-                            </div>
-                        </div>
-                        
-                        {/* Author Bio */}
-                        <div>
-                             <label className="block text-stone-700 font-bold mb-3">
-                                4. ข้อมูลผู้เขียน (Optional)
-                            </label>
-                            <textarea 
-                                value={authorBio}
-                                onChange={(e) => setAuthorBio(e.target.value)}
-                                placeholder="เช่น ผู้เชี่ยวชาญด้านการตลาด 10 ปี..."
-                                className="w-full px-4 py-3 text-sm border-2 border-stone-200 bg-purple-50/30 rounded-2xl focus:border-purple-500 focus:bg-white outline-none h-24 resize-none placeholder-stone-400"
-                            ></textarea>
-                        </div>
-
-                        <div className="pt-4 flex justify-end">
-                            <button
-                                onClick={handleStartStrategy}
-                                disabled={!topic.trim() || isProcessing}
-                                className="bg-purple-900 text-white px-10 py-4 rounded-2xl font-bold text-lg hover:bg-purple-800 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 transition-all shadow-xl shadow-purple-200 flex items-center gap-3 w-full md:w-auto justify-center"
-                            >
-                                {isProcessing ? 'กำลังประมวลผล...' : 'เริ่มสร้าง E-Book'} <ArrowRightIcon className="w-5 h-5" />
-                            </button>
-                        </div>
+                    <div className="pt-4 flex justify-center">
+                        <button
+                            onClick={handleStartStrategy}
+                            disabled={!topic.trim() || isProcessing}
+                            className="bg-purple-900 text-white px-12 py-4 rounded-2xl font-bold text-base hover:bg-purple-800 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 transition-all shadow-xl shadow-purple-200 flex items-center gap-3 w-full md:w-auto justify-center"
+                        >
+                            {isProcessing ? 'กำลังประมวลผล...' : 'เริ่มสร้าง E-Book'} <ArrowRightIcon className="w-5 h-5" />
+                        </button>
                     </div>
                 </div>
             </div>
@@ -542,16 +552,12 @@ const App: React.FC = () => {
         {step === WorkflowStep.OUTLINE && (
           <div className="flex flex-col items-center justify-center min-h-[500px] animate-fade-in relative">
              <div className="relative z-10 text-center">
-                 <div className="relative w-64 h-64 mx-auto mb-8">
-                     {/* Storyset Image with float animation */}
-                     <img 
-                        src={STORYSET_IMAGES.processing} 
-                        alt="Translator Amico" 
-                        className="w-full h-full object-contain animate-bounce-slow drop-shadow-xl"
-                        style={{ animationDuration: '3s' }}
-                     />
+                 <div className="relative w-40 h-40 mx-auto mb-8 bg-white rounded-full flex items-center justify-center shadow-xl border border-purple-100">
+                     <div className="w-24 h-24 text-purple-600 animate-pulse">
+                         <CpuChipIcon className="w-full h-full" />
+                     </div>
                      {/* Spinner Overlay */}
-                     <div className="absolute -bottom-4 right-10 bg-white p-3 rounded-full shadow-lg border border-purple-100">
+                     <div className="absolute -bottom-2 right-2 bg-white p-3 rounded-full shadow-lg border border-purple-100">
                         <div className="w-8 h-8 border-4 border-purple-200 border-t-purple-600 rounded-full animate-spin"></div>
                      </div>
                  </div>
@@ -585,11 +591,7 @@ const App: React.FC = () => {
                     {/* Main Content */}
                     <div className="lg:col-span-8 space-y-6">
                         <div className="bg-white/90 backdrop-blur-sm p-8 rounded-3xl shadow-xl border border-stone-200 relative overflow-hidden">
-                            {/* Decorative header image for approval */}
-                            <div className="absolute top-0 right-0 w-32 h-32 opacity-10 pointer-events-none">
-                                <img src={STORYSET_IMAGES.approval} className="w-full h-full object-cover" />
-                            </div>
-
+                            
                             <div className="flex justify-between items-start mb-6 relative z-10">
                                 <div>
                                     <h2 className="text-2xl font-bold text-stone-800">ยืนยันโครงเรื่อง (Blueprint)</h2>
@@ -668,19 +670,8 @@ const App: React.FC = () => {
                         </div>
                     </div>
 
-                    {/* Sidebar: Illustration & Actions */}
+                    {/* Sidebar: Actions */}
                     <div className="lg:col-span-4 space-y-6">
-                        {/* Illustration Card */}
-                        <div className="bg-purple-50 p-6 rounded-3xl border border-purple-100 flex flex-col items-center text-center">
-                            <img 
-                                src={STORYSET_IMAGES.approval} 
-                                alt="Usability Testing Pana" 
-                                className="w-48 h-auto mb-4 mix-blend-multiply drop-shadow-md"
-                            />
-                            <h3 className="font-bold text-purple-900 mb-2">ตรวจสอบความเรียบร้อย</h3>
-                            <p className="text-xs text-purple-700/70">โครงเรื่องที่ดีคือรากฐานของหนังสือที่ประสบความสำเร็จ</p>
-                        </div>
-
                         {/* Action Buttons */}
                         <div className="bg-white p-6 rounded-3xl shadow-lg border border-stone-100 space-y-4">
                             <button 
@@ -767,14 +758,6 @@ const App: React.FC = () => {
                 </div>
                 
                 <div className="lg:col-span-1 space-y-6">
-                   <div className="bg-purple-50 rounded-3xl p-6 flex flex-col items-center text-center border border-purple-100">
-                        <img 
-                            src={STORYSET_IMAGES.writing} 
-                            alt="Blogging Amico" 
-                            className="w-32 h-32 object-contain mix-blend-multiply mb-3"
-                        />
-                        <p className="text-sm font-bold text-purple-800">AI Writer กำลังทำงาน...</p>
-                   </div>
                    <AgentLog logs={logs} />
                 </div>
               </div>
@@ -783,15 +766,12 @@ const App: React.FC = () => {
             {/* Final Result View */}
             {step === WorkflowStep.COMPLETED && (
                <div className="space-y-6 animate-fade-in">
-                   <div className="bg-gradient-to-r from-purple-700 to-pink-600 rounded-3xl p-8 text-white flex flex-col md:flex-row items-center gap-8 shadow-2xl relative overflow-hidden">
+                   <div className="bg-gradient-to-r from-purple-700 to-pink-600 rounded-3xl p-8 text-white flex flex-col items-center justify-center text-center gap-4 shadow-2xl relative overflow-hidden">
                        <div className="absolute top-0 right-0 w-full h-full bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10"></div>
                        
-                       <div className="relative z-10 md:w-2/3">
+                       <div className="relative z-10">
                            <h2 className="text-3xl font-bold font-promt mb-2">🎉 หนังสือของคุณเสร็จสมบูรณ์แล้ว!</h2>
-                           <p className="text-purple-100 mb-6">คุณสามารถอ่าน แก้ไข และดาวน์โหลดผลงานได้ที่ด้านล่าง</p>
-                       </div>
-                       <div className="relative z-10 md:w-1/3 flex justify-center">
-                           <img src={STORYSET_IMAGES.completed} alt="Completed" className="w-48 drop-shadow-lg" />
+                           <p className="text-purple-100">คุณสามารถอ่าน แก้ไข และดาวน์โหลดผลงานได้ที่ด้านล่าง</p>
                        </div>
                    </div>
 
@@ -811,6 +791,7 @@ const App: React.FC = () => {
           </div>
         )}
       </main>
+      )}
 
       {/* Main Footer */}
       <footer className="w-full text-center py-8 text-stone-400 text-sm relative z-20">
