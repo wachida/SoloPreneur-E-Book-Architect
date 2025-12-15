@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ระบบสร้าง E-Book อัจฉริยะสำหรับผู้ประกอบการวันแมนโชว์</title>
+    <!-- We keep Tailwind CDN for simplicity in this setup, 
+         but normally you would import it in CSS for a full Vercel project. 
+         This works perfectly fine for deployment too. -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: {
+              promt: ['Prompt', 'sans-serif'],
+              sarabun: ['Sarabun', 'sans-serif'],
+            }
+          }
+        }
+      }
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&family=Sarabun:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+      body {
+        font-family: 'Prompt', sans-serif;
+        background-color: #faf5ff; /* purple-50 */
+      }
+      /* Custom scrollbar */
+      ::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+      }
+      ::-webkit-scrollbar-track {
+        background: #f3e8ff; /* purple-100 */
+      }
+      ::-webkit-scrollbar-thumb {
+        background: #d8b4fe; /* purple-300 */
+        border-radius: 4px;
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        background: #c084fc; /* purple-400 */
+      }
+      
+      /* Background Pattern */
+      .bg-pattern {
+        background-color: #faf5ff;
+        background-image: radial-gradient(#e9d5ff 1px, transparent 1px);
+        background-size: 24px 24px;
+      }
+      
+      /* Floating Blob Animation */
+      @keyframes float {
+        0% { transform: translate(0px, 0px) scale(1); }
+        33% { transform: translate(30px, -50px) scale(1.1); }
+        66% { transform: translate(-20px, 20px) scale(0.9); }
+        100% { transform: translate(0px, 0px) scale(1); }
+      }
+      .blob {
+        animation: float 10s infinite ease-in-out;
+      }
+      .blob-delay {
+        animation: float 12s infinite ease-in-out reverse;
+      }
+
+      /* Animations */
+      .animate-fade-in-up {
+        animation: fadeInUp 0.5s ease-out forwards;
+      }
+      .animate-fade-in {
+        animation: fadeIn 0.5s ease-out forwards;
+      }
+      .animate-scale-in {
+        animation: scaleIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+      }
+
+      @keyframes fadeInUp {
+        from {
+          opacity: 0;
+          transform: translateY(20px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+      
+      @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+      }
+
+      @keyframes scaleIn {
+        from { transform: scale(0); opacity: 0; }
+        to { transform: scale(1); opacity: 1; }
+      }
+    </style>
+<script type="importmap">
+{
+  "imports": {
+    "react-markdown": "https://esm.sh/react-markdown@^10.1.0",
+    "react/": "https://esm.sh/react@^19.2.3/",
+    "react": "https://esm.sh/react@^19.2.3",
+    "@google/genai": "https://esm.sh/@google/genai@^1.33.0",
+    "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
+    "@heroicons/react/": "https://esm.sh/@heroicons/react@^2.2.0/",
+    "vite": "https://esm.sh/vite@^7.3.0",
+    "@vitejs/plugin-react": "https://esm.sh/@vitejs/plugin-react@^5.1.2",
+    "marked": "https://esm.sh/marked@^17.0.1",
+    "jszip": "https://esm.sh/jszip@^3.10.1"
+  }
+}
+</script>
+</head>
+  <body class="text-stone-800 bg-pattern min-h-screen relative overflow-x-hidden">
+    <div id="root" class="relative z-10"></div>
+    
+    <!-- Decorative Background Blobs - Purple/Pink Theme -->
+    <div class="fixed top-[-10%] left-[-10%] w-[500px] h-[500px] bg-purple-200/40 rounded-full blur-3xl blob -z-0 pointer-events-none"></div>
+    <div class="fixed bottom-[-10%] right-[-10%] w-[600px] h-[600px] bg-pink-200/40 rounded-full blur-3xl blob-delay -z-0 pointer-events-none"></div>
+    <div class="fixed top-[20%] right-[10%] w-[300px] h-[300px] bg-fuchsia-100/50 rounded-full blur-3xl blob -z-0 pointer-events-none"></div>
+
+    <!-- Entry Point for Vite -->
+    <script type="module" src="/index.tsx"></script>
+  </body>
+</html>
