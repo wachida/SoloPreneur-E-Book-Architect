@@ -103,8 +103,8 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
                  <p className="font-semibold text-purple-700">ติดต่อแอดมินเพื่อเปิดระบบ</p>
                  <div className="bg-red-50 text-red-600 px-2 py-1.5 rounded-lg border border-red-100 inline-block mt-1">
                     <span className="font-bold">🔥 โปรโมชั่นก่อนสิ้นปี!</span><br/>
-                    จากราคา <span className="line-through opacity-60">5,900</span> เหลือเพียง <span className="font-bold text-sm">1,900 บาท</span><br/>
-                    (ใช้ได้ตลอดชีพ)
+                    จากราคา <span className="line-through opacity-60">9,900</span> เหลือเพียง <span className="font-bold text-sm">2,900 บาท</span><br/>
+                    (ใช้ได้ทั้งปี)
                  </div>
               </div>
            </div>
