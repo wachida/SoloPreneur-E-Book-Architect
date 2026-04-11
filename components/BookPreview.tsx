@@ -63,13 +63,6 @@ export const BookPreview: React.FC<BookPreviewProps> = ({ ebook, onRestart, onUp
   const [textColor, setTextColor] = useState('#000000');
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [showFontPicker, setShowFontPicker] = useState(false);
-
-  // Global Preview Settings
-  const [globalFontSize, setGlobalFontSize] = useState(16);
-  const [globalLineHeight, setGlobalLineHeight] = useState(1.1);
-  const [globalFontFamily, setGlobalFontFamily] = useState('Sarabun');
-  const [globalMargin, setGlobalMargin] = useState(2); // in cm
-  const [globalPageSize, setGlobalPageSize] = useState<'A5' | 'A4'>('A5');
   
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -246,14 +239,14 @@ export const BookPreview: React.FC<BookPreviewProps> = ({ ebook, onRestart, onUp
         bodyContent += `
         <div class="page-break" style="text-align:center; display: flex; flex-direction: column; justify-content: center; height: 100%;">
             <img src="${ebook.coverImage}" style="max-width:100%; max-height: 500px; margin: 0 auto 30px auto; border-radius: 4px;">
-            <h1 style="font-size: ${globalFontSize + 12}pt; margin-bottom: 10px;">${ebook.title}</h1>
-            <p style="font-size: ${globalFontSize}pt; color: #555;">${ebook.targetAudience}</p>
+            <h1 style="font-size: 28pt; margin-bottom: 10px;">${ebook.title}</h1>
+            <p style="font-size: 16pt; color: #555;">${ebook.targetAudience}</p>
         </div>`;
     } else {
         bodyContent += `
         <div class="page-break" style="text-align:center; padding-top: 100px;">
-            <h1 style="font-size: ${globalFontSize + 12}pt; margin-bottom: 20px;">${ebook.title}</h1>
-            <p style="font-size: ${globalFontSize + 2}pt;">${ebook.targetAudience}</p>
+            <h1 style="font-size: 28pt; margin-bottom: 20px;">${ebook.title}</h1>
+            <p style="font-size: 18pt;">${ebook.targetAudience}</p>
             <hr style="width: 50%; margin: 30px auto;">
             <p style="font-style: italic;">${ebook.description}</p>
         </div>`;
@@ -277,22 +270,23 @@ export const BookPreview: React.FC<BookPreviewProps> = ({ ebook, onRestart, onUp
           <title>${ebook.title}</title>
           <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
           <style>
-              /* Page Setup */
+              /* Page Setup: A5 (14.8 x 21 cm) */
               @page {
-                  size: ${globalPageSize};
-                  margin: 1.5cm ${globalMargin}cm;
+                  size: A5;
+                  margin: 1.5cm 2cm; /* Top/Bottom: 1.5cm, Left/Right: 2cm */
               }
 
               body { 
-                  font-family: '${globalFontFamily}', sans-serif; 
-                  font-size: ${globalFontSize}pt; 
-                  line-height: ${globalLineHeight};
+                  font-family: 'Sarabun', sans-serif; 
+                  font-size: 16pt; 
+                  line-height: 1.1; /* Line spacing 1.1 */
                   color: #000000;
                   background-color: #ffffff;
-                  max-width: ${globalPageSize === 'A5' ? '148mm' : '210mm'}; 
-                  min-height: ${globalPageSize === 'A5' ? '210mm' : '297mm'};
+                  /* Simulating A5 on web view */
+                  max-width: 148mm; 
+                  min-height: 210mm;
                   margin: 0 auto;
-                  padding: 1.5cm ${globalMargin}cm; 
+                  padding: 1.5cm 2cm; 
                   box-sizing: border-box;
                   text-align: justify;
                   text-justify: inter-word;
@@ -301,9 +295,9 @@ export const BookPreview: React.FC<BookPreviewProps> = ({ ebook, onRestart, onUp
               img { max-width: 100%; height: auto; display: block; margin: 15px auto; border-radius: 4px; }
               
               /* Headings */
-              h1 { font-family: '${globalFontFamily}', sans-serif; font-weight: 700; font-size: ${globalFontSize + 8}pt; line-height: 1.2; margin-bottom: 0.5em; text-align: center; }
-              h2 { font-family: '${globalFontFamily}', sans-serif; font-weight: 700; font-size: ${globalFontSize + 4}pt; line-height: 1.2; margin-top: 1.5em; margin-bottom: 0.8em; border-bottom: 2px solid #eee; padding-bottom: 5px; }
-              h3 { font-family: '${globalFontFamily}', sans-serif; font-weight: 600; font-size: ${globalFontSize + 2}pt; margin-top: 1em; margin-bottom: 0.5em; }
+              h1 { font-family: 'Sarabun', sans-serif; font-weight: 700; font-size: 24pt; line-height: 1.2; margin-bottom: 0.5em; text-align: center; }
+              h2 { font-family: 'Sarabun', sans-serif; font-weight: 700; font-size: 20pt; line-height: 1.2; margin-top: 1.5em; margin-bottom: 0.8em; border-bottom: 2px solid #eee; padding-bottom: 5px; }
+              h3 { font-family: 'Sarabun', sans-serif; font-weight: 600; font-size: 18pt; margin-top: 1em; margin-bottom: 0.5em; }
               
               /* Paragraphs */
               p { margin-bottom: 10pt; text-indent: 0; }
@@ -706,12 +700,6 @@ export const BookPreview: React.FC<BookPreviewProps> = ({ ebook, onRestart, onUp
                     >
                         <ArrowsRightLeftIcon className="w-3 h-3 text-blue-500" /> เรียบเรียงใหม่
                     </button>
-                    <button 
-                        onClick={() => handleAiEdit('tone')}
-                        className="flex items-center gap-1 px-2 py-1.5 bg-white border border-purple-200 rounded-lg text-xs font-medium text-stone-700 hover:bg-purple-50 hover:text-purple-800 transition-colors whitespace-nowrap"
-                    >
-                        <SpeakerWaveIcon className="w-3 h-3 text-purple-500" /> ปรับโทนเสียง
-                    </button>
                 </div>
             </div>
 
@@ -815,84 +803,6 @@ export const BookPreview: React.FC<BookPreviewProps> = ({ ebook, onRestart, onUp
             </p>
         </div>
 
-        {/* Preview Customization Tools */}
-        <div className="bg-white/80 backdrop-blur-sm p-6 rounded-2xl shadow-sm border border-stone-200 space-y-4">
-            <h3 className="font-bold text-stone-800 text-sm flex items-center gap-2 mb-2">
-                <PaintBrushIcon className="w-4 h-4 text-purple-600" /> ตั้งค่าการจัดหน้า (Layout)
-            </h3>
-            
-            <div className="space-y-3">
-                {/* Font Size */}
-                <div>
-                    <label className="text-[10px] font-bold text-stone-400 uppercase tracking-wider block mb-1">ขนาดตัวอักษร: {globalFontSize}pt</label>
-                    <input 
-                        type="range" 
-                        min="12" 
-                        max="24" 
-                        step="1"
-                        value={globalFontSize}
-                        onChange={(e) => setGlobalFontSize(Number(e.target.value))}
-                        className="w-full h-1.5 bg-stone-200 rounded-lg appearance-none cursor-pointer accent-purple-600"
-                    />
-                </div>
-
-                {/* Line Height */}
-                <div>
-                    <label className="text-[10px] font-bold text-stone-400 uppercase tracking-wider block mb-1">ระยะห่างบรรทัด: {globalLineHeight}</label>
-                    <input 
-                        type="range" 
-                        min="1" 
-                        max="2" 
-                        step="0.1"
-                        value={globalLineHeight}
-                        onChange={(e) => setGlobalLineHeight(Number(e.target.value))}
-                        className="w-full h-1.5 bg-stone-200 rounded-lg appearance-none cursor-pointer accent-purple-600"
-                    />
-                </div>
-
-                {/* Margins */}
-                <div>
-                    <label className="text-[10px] font-bold text-stone-400 uppercase tracking-wider block mb-1">ขอบกระดาษ (ซ้าย-ขวา): {globalMargin}cm</label>
-                    <input 
-                        type="range" 
-                        min="1" 
-                        max="4" 
-                        step="0.5"
-                        value={globalMargin}
-                        onChange={(e) => setGlobalMargin(Number(e.target.value))}
-                        className="w-full h-1.5 bg-stone-200 rounded-lg appearance-none cursor-pointer accent-purple-600"
-                    />
-                </div>
-
-                {/* Page Size & Font Family */}
-                <div className="grid grid-cols-2 gap-2">
-                    <div>
-                        <label className="text-[10px] font-bold text-stone-400 uppercase tracking-wider block mb-1">ขนาดหน้า</label>
-                        <select 
-                            value={globalPageSize}
-                            onChange={(e) => setGlobalPageSize(e.target.value as 'A5' | 'A4')}
-                            className="w-full text-xs p-2 bg-stone-50 border border-stone-200 rounded-lg outline-none focus:border-purple-500"
-                        >
-                            <option value="A5">A5 (มาตรฐาน)</option>
-                            <option value="A4">A4 (ใหญ่)</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label className="text-[10px] font-bold text-stone-400 uppercase tracking-wider block mb-1">ฟอนต์หลัก</label>
-                        <select 
-                            value={globalFontFamily}
-                            onChange={(e) => setGlobalFontFamily(e.target.value)}
-                            className="w-full text-xs p-2 bg-stone-50 border border-stone-200 rounded-lg outline-none focus:border-purple-500"
-                        >
-                            <option value="Sarabun">Sarabun</option>
-                            <option value="ui-serif">Serif</option>
-                            <option value="ui-sans-serif">Sans-serif</option>
-                        </select>
-                    </div>
-                </div>
-            </div>
-        </div>
-
         <button 
             onClick={onRestart}
             className="w-full py-3.5 bg-purple-900 text-white rounded-xl hover:bg-purple-800 transition-all font-medium mt-auto shadow-lg shadow-purple-300 flex justify-center items-center gap-2"
@@ -950,32 +860,19 @@ export const BookPreview: React.FC<BookPreviewProps> = ({ ebook, onRestart, onUp
             </div>
 
             {/* Content */}
-            <div 
-                className="w-2/3 overflow-y-auto p-10 bg-white custom-scrollbar transition-all duration-300"
-                style={{
-                    fontFamily: globalFontFamily,
-                    fontSize: `${globalFontSize}pt`,
-                    lineHeight: globalLineHeight,
-                    paddingLeft: `${globalMargin}cm`,
-                    paddingRight: `${globalMargin}cm`,
-                }}
-            >
-                <h2 
-                    className="font-bold text-stone-800 mb-8 border-b-2 border-purple-100 pb-6 font-promt leading-tight"
-                    style={{ fontSize: `${globalFontSize + 8}pt` }}
-                >
+            <div className="w-2/3 overflow-y-auto p-10 bg-white custom-scrollbar">
+                <h2 className="text-3xl font-bold text-stone-800 mb-8 border-b-2 border-purple-100 pb-6 font-promt leading-tight">
                     {ebook.chapters[activeChapter].title}
                 </h2>
-                <div className="prose prose-stone prose-lg max-w-none text-stone-700 leading-relaxed">
+                <div className="prose prose-stone prose-lg max-w-none text-stone-700 leading-relaxed font-sarabun">
                     <ReactMarkdown components={{
                       img: ({node, ...props}) => <img style={{maxWidth: '100%', borderRadius: '12px', margin: '30px auto', display:'block', boxShadow: '0 4px 12px rgba(0,0,0,0.08)'}} {...props} />,
-                      h2: ({node, ...props}) => <h2 className="text-purple-800 font-bold mt-8 mb-4" style={{ fontSize: `${globalFontSize + 4}pt` }} {...props} />,
-                      h3: ({node, ...props}) => <h3 className="text-stone-800 font-semibold mt-6 mb-3" style={{ fontSize: `${globalFontSize + 2}pt` }} {...props} />,
+                      h2: ({node, ...props}) => <h2 className="text-purple-800 font-bold mt-8 mb-4" {...props} />,
+                      h3: ({node, ...props}) => <h3 className="text-stone-800 font-semibold mt-6 mb-3" {...props} />,
                       blockquote: ({node, ...props}) => <blockquote className="border-l-4 border-purple-300 bg-purple-50 p-4 italic rounded-r-lg my-6 text-stone-600" {...props} />,
                       // Allow inline styles
                       div: ({node, ...props}) => <div {...props} />,
                       span: ({node, ...props}) => <span {...props} />,
-                      p: ({node, ...props}) => <p style={{ marginBottom: '10pt' }} {...props} />,
                     }} rehypePlugins={[]}>
                         {ebook.chapters[activeChapter].content || "ยังไม่มีเนื้อหา"}
                     </ReactMarkdown>
