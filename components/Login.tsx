@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { authService } from '../services/authService';
 import { User } from '../types';
-import { BookOpenIcon, LockClosedIcon, UserIcon, SparklesIcon, ChatBubbleLeftRightIcon } from '@heroicons/react/24/solid';
+import { BookOpenIcon, LockClosedIcon, UserIcon, SparklesIcon, ChatBubbleLeftRightIcon, ArrowLeftIcon, PlayCircleIcon } from '@heroicons/react/24/solid';
 
 interface LoginProps {
   onLogin: (user: User) => void;
@@ -22,6 +22,10 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
     }
   };
 
+  const handleBackToLanding = () => {
+    window.location.reload(); 
+  };
+
   return (
     <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden bg-purple-50">
       {/* Background Blobs */}
@@ -29,6 +33,16 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
       <div className="fixed bottom-[-10%] right-[-10%] w-[600px] h-[600px] bg-pink-200/40 rounded-full blur-3xl -z-0 pointer-events-none"></div>
 
       <div className="bg-white/80 backdrop-blur-xl p-8 rounded-3xl shadow-2xl border border-white w-full max-w-md relative z-10 animate-fade-in-up">
+        
+        {/* Back Button */}
+        <button 
+            onClick={handleBackToLanding}
+            className="absolute top-6 left-6 text-stone-400 hover:text-stone-600 transition-colors"
+            title="กลับหน้าหลัก"
+        >
+            <ArrowLeftIcon className="w-5 h-5" />
+        </button>
+
         <div className="text-center mb-6">
           <div className="inline-flex items-center justify-center p-3 bg-gradient-to-br from-purple-600 to-pink-500 rounded-2xl text-white shadow-lg shadow-purple-200 mb-4">
             <BookOpenIcon className="w-10 h-10" />
@@ -103,8 +117,8 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
                  <p className="font-semibold text-purple-700">ติดต่อแอดมินเพื่อเปิดระบบ</p>
                  <div className="bg-red-50 text-red-600 px-2 py-1.5 rounded-lg border border-red-100 inline-block mt-1">
                     <span className="font-bold">🔥 โปรโมชั่นก่อนสิ้นปี!</span><br/>
-                    จากราคา <span className="line-through opacity-60">9,900</span> เหลือเพียง <span className="font-bold text-sm">2,900 บาท</span><br/>
-                    (ใช้ได้ทั้งปี)
+                    จากราคา <span className="line-through opacity-60">5,900</span> เหลือเพียง <span className="font-bold text-sm">2,990 บาท</span><br/>
+                    (ใช้ได้ตลอดชีพ)
                  </div>
               </div>
            </div>

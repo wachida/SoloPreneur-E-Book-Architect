@@ -8,12 +8,14 @@ const INITIAL_USERS: User[] = [
   {
     email: 'admin-automation@ebook.com',
     password: 'password123',
-    role: UserRole.ADMIN
+    role: UserRole.ADMIN,
+    plan: 'PRO_YEARLY'
   },
   {
     email: 'user-automation@ebook.com',
     password: 'password123',
-    role: UserRole.USER
+    role: UserRole.USER,
+    plan: 'FREE'
   }
 ];
 
@@ -51,6 +53,27 @@ export const authService = {
     return stored ? JSON.parse(stored) : null;
   },
 
+  // Simulate upgrading user plan (In real app, this happens via Stripe Webhook)
+  upgradeUserPlan: (email: string, plan: 'PRO_MONTHLY' | 'PRO_YEARLY') => {
+    const users = JSON.parse(localStorage.getItem(USERS_STORAGE_KEY) || '[]');
+    const updatedUsers = users.map((u: User) => {
+        if (u.email === email) {
+            return { ...u, plan: plan, subscriptionEndDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString() };
+        }
+        return u;
+    });
+    localStorage.setItem(USERS_STORAGE_KEY, JSON.stringify(updatedUsers));
+    
+    // Update current session if it's the same user
+    const currentUser = JSON.parse(localStorage.getItem(CURRENT_USER_KEY) || '{}');
+    if (currentUser.email === email) {
+        currentUser.plan = plan;
+        localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(currentUser));
+    }
+    
+    return currentUser;
+  },
+
   // Admin Methods
   getAllUsers: (): User[] => {
     const users = JSON.parse(localStorage.getItem(USERS_STORAGE_KEY) || '[]');
@@ -62,7 +85,9 @@ export const authService = {
     if (users.find((u: User) => u.email === user.email)) {
       throw new Error("อีเมลนี้มีอยู่ในระบบแล้ว");
     }
-    users.push(user);
+    // Default new users to FREE
+    const newUser = { ...user, plan: 'FREE' };
+    users.push(newUser);
     localStorage.setItem(USERS_STORAGE_KEY, JSON.stringify(users));
   },
 

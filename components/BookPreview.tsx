@@ -32,7 +32,6 @@ import {
 
 interface BookPreviewProps {
   ebook: EBook;
-  apiKey: string;
   onRestart: () => void;
   onUpdateChapter: (index: number, content: string) => void;
 }
@@ -44,13 +43,13 @@ const COMMON_EMOJIS = [
 ];
 
 const FONT_OPTIONS = [
-  { label: 'ค่าเริ่มต้น (Prompt)', value: '' },
+  { label: 'ค่าเริ่มต้น (Sarabun)', value: '' },
   { label: 'Sarabun (เนื้อหา)', value: 'Sarabun' },
   { label: 'Serif (ทางการ)', value: 'ui-serif, Georgia, serif' },
   { label: 'Monospace (โค้ด)', value: 'ui-monospace, SFMono-Regular, monospace' },
 ];
 
-export const BookPreview: React.FC<BookPreviewProps> = ({ ebook, apiKey, onRestart, onUpdateChapter }) => {
+export const BookPreview: React.FC<BookPreviewProps> = ({ ebook, onRestart, onUpdateChapter }) => {
   const [activeChapter, setActiveChapter] = useState(0);
   const [isExportingEPUB, setIsExportingEPUB] = useState(false);
   
@@ -64,6 +63,13 @@ export const BookPreview: React.FC<BookPreviewProps> = ({ ebook, apiKey, onResta
   const [textColor, setTextColor] = useState('#000000');
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [showFontPicker, setShowFontPicker] = useState(false);
+
+  // Global Preview Settings
+  const [globalFontSize, setGlobalFontSize] = useState(16);
+  const [globalLineHeight, setGlobalLineHeight] = useState(1.1);
+  const [globalFontFamily, setGlobalFontFamily] = useState('Sarabun');
+  const [globalMargin, setGlobalMargin] = useState(2); // in cm
+  const [globalPageSize, setGlobalPageSize] = useState<'A5' | 'A4'>('A5');
   
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -199,7 +205,7 @@ export const BookPreview: React.FC<BookPreviewProps> = ({ ebook, apiKey, onResta
     }
 
     try {
-        const result = await editContentWithAI(apiKey, textToProcess, instruction, {
+        const result = await editContentWithAI(textToProcess, instruction, {
             tone: ebook.tone,
             audience: ebook.targetAudience
         });
@@ -235,18 +241,30 @@ export const BookPreview: React.FC<BookPreviewProps> = ({ ebook, apiKey, onResta
   const getFullHTML = async () => {
     let bodyContent = '';
     
+    // Cover Page
     if (ebook.coverImage) {
-        bodyContent += `<div style="text-align:center; margin-bottom: 60px;"><img src="${ebook.coverImage}" style="max-width:100%; height:auto; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.15);"></div>`;
+        bodyContent += `
+        <div class="page-break" style="text-align:center; display: flex; flex-direction: column; justify-content: center; height: 100%;">
+            <img src="${ebook.coverImage}" style="max-width:100%; max-height: 500px; margin: 0 auto 30px auto; border-radius: 4px;">
+            <h1 style="font-size: ${globalFontSize + 12}pt; margin-bottom: 10px;">${ebook.title}</h1>
+            <p style="font-size: ${globalFontSize}pt; color: #555;">${ebook.targetAudience}</p>
+        </div>`;
+    } else {
+        bodyContent += `
+        <div class="page-break" style="text-align:center; padding-top: 100px;">
+            <h1 style="font-size: ${globalFontSize + 12}pt; margin-bottom: 20px;">${ebook.title}</h1>
+            <p style="font-size: ${globalFontSize + 2}pt;">${ebook.targetAudience}</p>
+            <hr style="width: 50%; margin: 30px auto;">
+            <p style="font-style: italic;">${ebook.description}</p>
+        </div>`;
     }
-    bodyContent += `<h1 style="text-align:center; font-size: 3.5em; margin-bottom: 0.5em; color: #44403c; font-family: 'Prompt', sans-serif;">${ebook.title}</h1>`;
-    bodyContent += `<p style="text-align:center; font-size: 1.2em; color: #78716c; margin-bottom: 3em;">${ebook.targetAudience}</p>`;
-    bodyContent += `<div style="text-align:center; font-style: italic; margin-bottom: 6em; padding: 40px; background: #faf5ff; border-radius: 16px; border: 1px solid #e9d5ff;">${ebook.description}</div>`;
     
+    // Chapters
     for (const chap of ebook.chapters) {
-        bodyContent += `<div style="page-break-after: always; margin-bottom: 80px;">`;
-        bodyContent += `<h2 style="font-size: 2.2em; border-bottom: 3px solid #9333ea; padding-bottom: 15px; margin-bottom: 30px; color: #581c87; font-family: 'Prompt', sans-serif;">${chap.title}</h2>`;
+        bodyContent += `<div class="page-break">`;
+        bodyContent += `<h2>${chap.title}</h2>`;
         const htmlContent = await marked.parse(chap.content || '');
-        bodyContent += `<div style="font-size: 1em; line-height: 1.9; color: #292524;">${htmlContent}</div>`;
+        bodyContent += `<div>${htmlContent}</div>`;
         bodyContent += `</div>`;
     }
 
@@ -257,20 +275,64 @@ export const BookPreview: React.FC<BookPreviewProps> = ({ ebook, apiKey, onResta
           <meta charset="UTF-8">
           <meta name="viewport" content="width=device-width, initial-scale=1.0">
           <title>${ebook.title}</title>
-          <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@400;700&family=Sarabun:wght@300;400;600&display=swap" rel="stylesheet">
+          <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
           <style>
-              body { font-family: 'Sarabun', sans-serif; max-width: 800px; margin: 0 auto; padding: 60px; background-color: #ffffff; font-size: 16px; }
-              img { max-width: 100%; height: auto; display: block; margin: 30px auto; border-radius: 8px; }
-              h1, h2, h3 { font-family: 'Prompt', sans-serif; font-weight: 700; }
-              p { margin-bottom: 1.6em; }
-              ul, ol { margin-bottom: 1.6em; padding-left: 24px; }
-              li { margin-bottom: 0.8em; }
-              blockquote { border-left: 5px solid #d8b4fe; padding-left: 20px; color: #6b21a8; font-style: italic; background: #faf5ff; padding: 15px 20px; border-radius: 0 8px 8px 0; }
-              /* Utility classes support for printing */
+              /* Page Setup */
+              @page {
+                  size: ${globalPageSize};
+                  margin: 1.5cm ${globalMargin}cm;
+              }
+
+              body { 
+                  font-family: '${globalFontFamily}', sans-serif; 
+                  font-size: ${globalFontSize}pt; 
+                  line-height: ${globalLineHeight};
+                  color: #000000;
+                  background-color: #ffffff;
+                  max-width: ${globalPageSize === 'A5' ? '148mm' : '210mm'}; 
+                  min-height: ${globalPageSize === 'A5' ? '210mm' : '297mm'};
+                  margin: 0 auto;
+                  padding: 1.5cm ${globalMargin}cm; 
+                  box-sizing: border-box;
+                  text-align: justify;
+                  text-justify: inter-word;
+              }
+
+              img { max-width: 100%; height: auto; display: block; margin: 15px auto; border-radius: 4px; }
+              
+              /* Headings */
+              h1 { font-family: '${globalFontFamily}', sans-serif; font-weight: 700; font-size: ${globalFontSize + 8}pt; line-height: 1.2; margin-bottom: 0.5em; text-align: center; }
+              h2 { font-family: '${globalFontFamily}', sans-serif; font-weight: 700; font-size: ${globalFontSize + 4}pt; line-height: 1.2; margin-top: 1.5em; margin-bottom: 0.8em; border-bottom: 2px solid #eee; padding-bottom: 5px; }
+              h3 { font-family: '${globalFontFamily}', sans-serif; font-weight: 600; font-size: ${globalFontSize + 2}pt; margin-top: 1em; margin-bottom: 0.5em; }
+              
+              /* Paragraphs */
+              p { margin-bottom: 10pt; text-indent: 0; }
+              
+              /* Lists */
+              ul, ol { margin-bottom: 10pt; padding-left: 1cm; }
+              li { margin-bottom: 5pt; }
+              
+              /* Blockquote */
+              blockquote { border-left: 4px solid #ddd; padding-left: 15px; color: #555; font-style: italic; margin: 15px 0; background-color: #f9f9f9; padding: 10px; }
+              
+              /* Code */
+              code { font-family: 'Courier New', monospace; background: #eee; padding: 2px 4px; border-radius: 3px; font-size: 0.9em; }
+              pre { background: #f5f5f5; padding: 10px; border-radius: 5px; overflow-x: auto; margin-bottom: 15px; }
+
+              /* Utilities */
+              .page-break { page-break-after: always; display: block; }
               .text-center { text-align: center; }
               .text-right { text-align: right; }
+
+              /* Print Specifics */
               @media print {
-                  body { max-width: 100%; padding: 0; }
+                  body { 
+                      width: auto; 
+                      margin: 0; 
+                      padding: 0; 
+                      box-shadow: none;
+                  }
+                  .page-break { page-break-after: always; }
               }
           </style>
       </head>
@@ -321,13 +383,22 @@ export const BookPreview: React.FC<BookPreviewProps> = ({ ebook, apiKey, onResta
         const oebps = zip.folder("OEBPS");
         if(!oebps) return;
 
-        // CSS
+        // CSS - Updated for A5 style logic (16pt Sarabun)
         oebps.file("style.css", `
-            body { font-family: 'Sarabun', sans-serif; line-height: 1.6; color: #333; font-size: 16px; }
-            h1, h2, h3 { color: #7e22ce; margin-top: 1em; margin-bottom: 0.5em; font-family: 'Prompt', sans-serif; }
+            @import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;700&display=swap');
+            body { 
+                font-family: 'Sarabun', sans-serif; 
+                line-height: 1.1; 
+                color: #000; 
+                font-size: 16pt;
+                text-align: justify;
+            }
+            h1 { font-size: 24pt; color: #000; margin-top: 1em; margin-bottom: 0.5em; font-weight: bold; text-align: center; }
+            h2 { font-size: 20pt; color: #000; margin-top: 1.5em; margin-bottom: 0.8em; font-weight: bold; border-bottom: 1px solid #ccc; padding-bottom: 5px; }
+            h3 { font-size: 18pt; color: #333; margin-top: 1em; margin-bottom: 0.5em; font-weight: bold; }
             img { max-width: 100%; height: auto; display: block; margin: 1em auto; }
-            blockquote { border-left: 4px solid #a855f7; padding-left: 1em; color: #6b21a8; font-style: italic; margin: 1em 0; }
-            p { margin-bottom: 1em; }
+            blockquote { border-left: 4px solid #ccc; padding-left: 1em; color: #555; font-style: italic; margin: 1em 0; background: #f5f5f5; padding: 10px; }
+            p { margin-bottom: 10pt; text-indent: 0; }
         `);
 
         let manifest = '';
@@ -341,9 +412,9 @@ export const BookPreview: React.FC<BookPreviewProps> = ({ ebook, apiKey, onResta
 <head><title>${ebook.title}</title><link rel="stylesheet" type="text/css" href="style.css"/></head>
 <body>
   <div style="text-align:center; margin-top: 50px;">
-    ${ebook.coverImage ? `<img src="cover.jpg" alt="Cover" style="max-height: 800px;"/>` : ''}
+    ${ebook.coverImage ? `<img src="cover.jpg" alt="Cover" style="max-height: 600px;"/>` : ''}
     <h1>${ebook.title}</h1>
-    <p>${ebook.targetAudience}</p>
+    <p style="font-size: 18pt;">${ebook.targetAudience}</p>
     <p><i>${ebook.description}</i></p>
   </div>
 </body>
@@ -635,6 +706,12 @@ export const BookPreview: React.FC<BookPreviewProps> = ({ ebook, apiKey, onResta
                     >
                         <ArrowsRightLeftIcon className="w-3 h-3 text-blue-500" /> เรียบเรียงใหม่
                     </button>
+                    <button 
+                        onClick={() => handleAiEdit('tone')}
+                        className="flex items-center gap-1 px-2 py-1.5 bg-white border border-purple-200 rounded-lg text-xs font-medium text-stone-700 hover:bg-purple-50 hover:text-purple-800 transition-colors whitespace-nowrap"
+                    >
+                        <SpeakerWaveIcon className="w-3 h-3 text-purple-500" /> ปรับโทนเสียง
+                    </button>
                 </div>
             </div>
 
@@ -738,6 +815,84 @@ export const BookPreview: React.FC<BookPreviewProps> = ({ ebook, apiKey, onResta
             </p>
         </div>
 
+        {/* Preview Customization Tools */}
+        <div className="bg-white/80 backdrop-blur-sm p-6 rounded-2xl shadow-sm border border-stone-200 space-y-4">
+            <h3 className="font-bold text-stone-800 text-sm flex items-center gap-2 mb-2">
+                <PaintBrushIcon className="w-4 h-4 text-purple-600" /> ตั้งค่าการจัดหน้า (Layout)
+            </h3>
+            
+            <div className="space-y-3">
+                {/* Font Size */}
+                <div>
+                    <label className="text-[10px] font-bold text-stone-400 uppercase tracking-wider block mb-1">ขนาดตัวอักษร: {globalFontSize}pt</label>
+                    <input 
+                        type="range" 
+                        min="12" 
+                        max="24" 
+                        step="1"
+                        value={globalFontSize}
+                        onChange={(e) => setGlobalFontSize(Number(e.target.value))}
+                        className="w-full h-1.5 bg-stone-200 rounded-lg appearance-none cursor-pointer accent-purple-600"
+                    />
+                </div>
+
+                {/* Line Height */}
+                <div>
+                    <label className="text-[10px] font-bold text-stone-400 uppercase tracking-wider block mb-1">ระยะห่างบรรทัด: {globalLineHeight}</label>
+                    <input 
+                        type="range" 
+                        min="1" 
+                        max="2" 
+                        step="0.1"
+                        value={globalLineHeight}
+                        onChange={(e) => setGlobalLineHeight(Number(e.target.value))}
+                        className="w-full h-1.5 bg-stone-200 rounded-lg appearance-none cursor-pointer accent-purple-600"
+                    />
+                </div>
+
+                {/* Margins */}
+                <div>
+                    <label className="text-[10px] font-bold text-stone-400 uppercase tracking-wider block mb-1">ขอบกระดาษ (ซ้าย-ขวา): {globalMargin}cm</label>
+                    <input 
+                        type="range" 
+                        min="1" 
+                        max="4" 
+                        step="0.5"
+                        value={globalMargin}
+                        onChange={(e) => setGlobalMargin(Number(e.target.value))}
+                        className="w-full h-1.5 bg-stone-200 rounded-lg appearance-none cursor-pointer accent-purple-600"
+                    />
+                </div>
+
+                {/* Page Size & Font Family */}
+                <div className="grid grid-cols-2 gap-2">
+                    <div>
+                        <label className="text-[10px] font-bold text-stone-400 uppercase tracking-wider block mb-1">ขนาดหน้า</label>
+                        <select 
+                            value={globalPageSize}
+                            onChange={(e) => setGlobalPageSize(e.target.value as 'A5' | 'A4')}
+                            className="w-full text-xs p-2 bg-stone-50 border border-stone-200 rounded-lg outline-none focus:border-purple-500"
+                        >
+                            <option value="A5">A5 (มาตรฐาน)</option>
+                            <option value="A4">A4 (ใหญ่)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label className="text-[10px] font-bold text-stone-400 uppercase tracking-wider block mb-1">ฟอนต์หลัก</label>
+                        <select 
+                            value={globalFontFamily}
+                            onChange={(e) => setGlobalFontFamily(e.target.value)}
+                            className="w-full text-xs p-2 bg-stone-50 border border-stone-200 rounded-lg outline-none focus:border-purple-500"
+                        >
+                            <option value="Sarabun">Sarabun</option>
+                            <option value="ui-serif">Serif</option>
+                            <option value="ui-sans-serif">Sans-serif</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <button 
             onClick={onRestart}
             className="w-full py-3.5 bg-purple-900 text-white rounded-xl hover:bg-purple-800 transition-all font-medium mt-auto shadow-lg shadow-purple-300 flex justify-center items-center gap-2"
@@ -795,19 +950,32 @@ export const BookPreview: React.FC<BookPreviewProps> = ({ ebook, apiKey, onResta
             </div>
 
             {/* Content */}
-            <div className="w-2/3 overflow-y-auto p-10 bg-white custom-scrollbar">
-                <h2 className="text-3xl font-bold text-stone-800 mb-8 border-b-2 border-purple-100 pb-6 font-promt leading-tight">
+            <div 
+                className="w-2/3 overflow-y-auto p-10 bg-white custom-scrollbar transition-all duration-300"
+                style={{
+                    fontFamily: globalFontFamily,
+                    fontSize: `${globalFontSize}pt`,
+                    lineHeight: globalLineHeight,
+                    paddingLeft: `${globalMargin}cm`,
+                    paddingRight: `${globalMargin}cm`,
+                }}
+            >
+                <h2 
+                    className="font-bold text-stone-800 mb-8 border-b-2 border-purple-100 pb-6 font-promt leading-tight"
+                    style={{ fontSize: `${globalFontSize + 8}pt` }}
+                >
                     {ebook.chapters[activeChapter].title}
                 </h2>
-                <div className="prose prose-stone prose-lg max-w-none text-stone-700 leading-relaxed font-sarabun">
+                <div className="prose prose-stone prose-lg max-w-none text-stone-700 leading-relaxed">
                     <ReactMarkdown components={{
                       img: ({node, ...props}) => <img style={{maxWidth: '100%', borderRadius: '12px', margin: '30px auto', display:'block', boxShadow: '0 4px 12px rgba(0,0,0,0.08)'}} {...props} />,
-                      h2: ({node, ...props}) => <h2 className="text-purple-800 font-bold mt-8 mb-4" {...props} />,
-                      h3: ({node, ...props}) => <h3 className="text-stone-800 font-semibold mt-6 mb-3" {...props} />,
+                      h2: ({node, ...props}) => <h2 className="text-purple-800 font-bold mt-8 mb-4" style={{ fontSize: `${globalFontSize + 4}pt` }} {...props} />,
+                      h3: ({node, ...props}) => <h3 className="text-stone-800 font-semibold mt-6 mb-3" style={{ fontSize: `${globalFontSize + 2}pt` }} {...props} />,
                       blockquote: ({node, ...props}) => <blockquote className="border-l-4 border-purple-300 bg-purple-50 p-4 italic rounded-r-lg my-6 text-stone-600" {...props} />,
                       // Allow inline styles
                       div: ({node, ...props}) => <div {...props} />,
                       span: ({node, ...props}) => <span {...props} />,
+                      p: ({node, ...props}) => <p style={{ marginBottom: '10pt' }} {...props} />,
                     }} rehypePlugins={[]}>
                         {ebook.chapters[activeChapter].content || "ยังไม่มีเนื้อหา"}
                     </ReactMarkdown>

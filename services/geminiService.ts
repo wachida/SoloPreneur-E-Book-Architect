@@ -1,16 +1,17 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import { Chapter, EBook } from "../types";
 
-const getClient = (apiKey: string) => {
+const getClient = () => {
+  const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) {
-    throw new Error("API Key is missing.");
+    throw new Error("Gemini API Key is missing in environment variables.");
   }
   return new GoogleGenAI({ apiKey });
 };
 
 // 1. Agent: Senior Strategist
-export const generateBookOutline = async (apiKey: string, topic: string): Promise<Partial<EBook>> => {
-  const ai = getClient(apiKey);
+export const generateBookOutline = async (topic: string): Promise<Partial<EBook>> => {
+  const ai = getClient();
   
   const prompt = `
     You are a World-Class E-Book Strategist and Editor-in-Chief with over 15 years of experience in the publishing industry.
@@ -28,7 +29,7 @@ export const generateBookOutline = async (apiKey: string, topic: string): Promis
   `;
 
   const response = await ai.models.generateContent({
-    model: 'gemini-2.5-flash',
+    model: 'gemini-3-flash-preview',
     contents: prompt,
     config: {
       responseMimeType: "application/json",
@@ -83,7 +84,6 @@ export const generateBookOutline = async (apiKey: string, topic: string): Promis
 
 // 2. Agent: Senior Ghostwriter
 export const generateChapterContent = async (
-  apiKey: string,
   bookTitle: string, 
   chapterTitle: string, 
   audience: string,
@@ -91,7 +91,7 @@ export const generateChapterContent = async (
   tone: string = "Professional & Authoritative",
   authorBio: string = ""
 ): Promise<string> => {
-  const ai = getClient(apiKey);
+  const ai = getClient();
 
   const prompt = `
     You are a Senior Professional Ghostwriter and Editor with over 15 years of experience.
@@ -119,7 +119,7 @@ export const generateChapterContent = async (
   `;
 
   const response = await ai.models.generateContent({
-    model: 'gemini-2.5-flash',
+    model: 'gemini-3-flash-preview',
     contents: prompt,
   });
 
@@ -127,11 +127,11 @@ export const generateChapterContent = async (
 };
 
 // 3. Agent: Senior Art Director
-export const generateCoverImage = async (apiKey: string, title: string, description: string, style: string = 'Minimalist'): Promise<string> => {
-  const ai = getClient(apiKey);
+export const generateCoverImage = async (title: string, description: string, style: string = 'Minimalist'): Promise<string> => {
+  const ai = getClient();
   
   const promptDesignResponse = await ai.models.generateContent({
-    model: 'gemini-2.5-flash',
+    model: 'gemini-3-flash-preview',
     contents: `You are a Senior Art Director with 15 years of experience in Book Cover Design.
     Create a highly detailed, artistic image generation prompt for a non-fiction e-book cover.
     
@@ -152,7 +152,7 @@ export const generateCoverImage = async (apiKey: string, title: string, descript
 
   try {
     const response = await ai.models.generateContent({
-      model: 'gemini-3-pro-image-preview',
+      model: 'gemini-2.5-flash-image',
       contents: {
         parts: [{ text: imagePrompt }]
       },
@@ -180,12 +180,11 @@ export const generateCoverImage = async (apiKey: string, title: string, descript
 
 // 4. Agent: AI Editor Assistant
 export const editContentWithAI = async (
-  apiKey: string,
   originalText: string,
   instruction: string,
   context?: { tone?: string, audience?: string }
 ): Promise<string> => {
-  const ai = getClient(apiKey);
+  const ai = getClient();
   const prompt = `
     You are a professional book editor and writing assistant.
     
@@ -206,7 +205,7 @@ export const editContentWithAI = async (
   `;
 
   const response = await ai.models.generateContent({
-    model: 'gemini-2.5-flash',
+    model: 'gemini-3-flash-preview',
     contents: prompt,
   });
 

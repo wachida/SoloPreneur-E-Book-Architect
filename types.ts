@@ -46,8 +46,12 @@ export enum UserRole {
   USER = 'USER'
 }
 
+export type SubscriptionPlan = 'FREE' | 'PRO_MONTHLY' | 'PRO_YEARLY';
+
 export interface User {
   email: string;
   role: UserRole;
   password?: string; // Only used internally/mocking
+  plan?: SubscriptionPlan; // New field
+  subscriptionEndDate?: string; // ISO Date string
 }
